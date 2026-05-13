@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Timer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #111827; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .card { background: #1f2937; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        h2 { margin-bottom: 15px; color: #f59e0b; }
+        .phase { font-size: 26px; font-weight: bold; margin-bottom: 5px; }
+        .phase.work { color: #10b981; }
+        .phase.rest { color: #60a5fa; }
+        .timer { font-size: 72px; font-weight: bold; margin: 10px 0; }
+        .rounds { color: #9ca3af; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; color: white; }
+        .start { background: #10b981; }
+        .pause { background: #f59e0b; }
+        .reset { background: #ef4444; }
+        .skip { background: #6366f1; }
+        .config { background: #374151; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+        label { font-size: 13px; color: #9ca3af; display: flex; justify-content: space-between; }
+        input[type="number"] { background: #1f2937; border: 1px solid #4b5563; color: white; padding: 8px; border-radius: 6px; width: 60px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🏃 Interval Timer</h2>
+        <div class="phase" id="phase">Tayyor</div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="rounds" id="rounds">Bosqich: 0 / 8</div>
+        <div class="controls">
+            <button class="start" id="startBtn" onclick="toggleTimer()">▶ Boshlash</button>
+            <button class="reset" onclick="resetTimer()">↺ Qayta</button>
+            <button class="skip" onclick="nextPhase()">⏭ Keyingi</button>
+        </div>
+        <div class="config">
+            <label>Ish (s): <input type="number" id="workTime" value="20" min="5"></label>
+            <label>Tanaffus (s): <input type="number" id="restTime" value="10" min="3"></label>
+            <label>Raundlar: <input type="number" id="roundsCount" value="8" min="1"></label>
+        </div>
+    </div>
+
+    <script>
+        let timer, currentRound = 1, isWork = true, timeLeft = 20, isRunning = false;
+        const phaseEl = document.getElementById('phase');
+        const timerEl = document.getElementById('timer');
+        const roundsEl = document.getElementById('rounds');
+        const startBtn = document.getElementById('startBtn');
+
+        function updateDisplay() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+            const total = parseInt(document.getElementById('roundsCount').value);
+            roundsEl.textContent = `Bosqich: ${currentRound} / ${total}`;
+            phaseEl.className = 'phase ' + (isWork ? 'work' : 'rest');
+            phaseEl.textContent = isWork ? '💪 ISHLASH' : '😌 TANAFFUS';
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timer);
+                startBtn.textContent = '▶ Davom';
+            } else {
+                startBtn.textContent = '⏸ To\'xtatish';
+                timer = setInterval(tick, 1000);
+            }
+            isRunning = !isRunning;
+        }
+
+        function tick() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+            } else {
+                nextPhase();
+            }
+        }
+
+        function nextPhase() {
+            if (isWork) {
+                if (currentRound >= parseInt(document.getElementById('roundsCount').value)) {
+                    clearInterval(timer);
+                    isRunning = false;
+                    phaseEl.textContent = '🎉 YAKUNLANDI!';
+                    startBtn.textContent = '▶ Boshlash';
+                    return;
+                }
+                isWork = false;
+                timeLeft = parseInt(document.getElementById('restTime').value);
+            } else {
+                isWork = true;
+                currentRound++;
+                timeLeft = parseInt(document.getElementById('workTime').value);
+            }
+            updateDisplay();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            isRunning = false;
+            currentRound = 1;
+            isWork = true;
+            timeLeft = parseInt(document.getElementById('workTime').value);
+            startBtn.textContent = '▶ Boshlash';
+            updateDisplay();
+        }
+
+        ['workTime','restTime','roundsCount'].forEach(id => {
+            document.getElementById(id).addEventListener('change', resetTimer);
+        });
+        updateDisplay();
+    </script>
+</body>
+</html>
